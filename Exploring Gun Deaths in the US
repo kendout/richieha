@@ -1,0 +1,108 @@
+'''
+author: Ha Tuan Phu
+decription: the project of analysing US gun death
+'''
+
+
+import csv
+from pprint import pprint
+with open('guns.csv', 'r') as f:
+    data = list(csv.reader(f))
+    headers = data[0]
+    data = data[1:]
+pprint(data[:4])
+print(headers)
+
+#_________________________________Count cases per year and store in dictionary year_counts___________________________
+years = [row[1] for row in data ]
+year_counts ={}
+for year in years:
+    if year in year_counts:
+        year_counts[year] += 1
+    elif year not in year_counts:
+        year_counts[year] = 1
+print(year_counts)
+
+#_________________________________Changing date from float format to datetime format in the data file___________________________
+import datetime
+dates =[]
+for row in data:
+    dates.append(datetime.datetime(year = int(row[1]), month = int(row[2]), day =1))
+print(dates[:2])
+date_counts = {}
+for date in dates:
+    if date in date_counts:
+        date_counts[date] += 1
+    if date not in date_counts:
+        date_counts[date] = 1
+print(date_counts)
+
+#_________________________________Doing sex count and store in dictionary sex_counts___________________________     
+sex_counts = {}
+for row in data:
+    if row[5] in sex_counts:
+        sex_counts[row[5]] += 1
+    if row[5] not in sex_counts:
+        sex_counts[row[5]] = 1
+print(sex_counts)
+
+#_________________________________Doing race count and store in dictionary race_counts___________________________
+race_counts = {}
+for row in data:
+    if row[7] in race_counts:
+        race_counts[row[7]] += 1
+    if row[7] not in race_counts:
+        race_counts[row[7]] = 1
+print(race_counts)
+
+#_________________________________Load US census file___________________________
+with open('census.csv', 'r') as f2:
+    census = list(csv.reader(f2))
+pprint(census)
+
+#_________________________________Pull out data of population per race and edit then store in race_pop_edited___________________________
+race_pop ={}
+for item in census[0]:
+    try:
+        race_pop[item] = int(census[1][census[0].index(item)])
+    except: pass
+pprint(race_pop)
+race_pop_edited = {}
+race_pop_edited['Black'] = race_pop['Race Alone - Black or African American']
+race_pop_edited['White'] = race_pop['Race Alone - White']
+
+race_pop_edited['Asian/Pacific Islander'] = race_pop['Race Alone - Asian']\
++ race_pop['Race Alone - Native Hawaiian and Other Pacific Islander']
+
+race_pop_edited['Native American/Native Alaskan'] = race_pop['Race Alone - American Indian and Alaska Native']
+race_pop_edited['Hispanic'] = race_pop['Race Alone - Hispanic']
+pprint(race_pop_edited)
+
+#_________________________________find rate of suicide per race___________________________
+mapping_race ={}
+for key in race_counts:
+    mapping_race[key] = race_counts[key]/race_pop_edited[key]
+race_per_hundredk = {}
+for key in mapping_race:
+    race_per_hundredk[key] = mapping_race[key]*100000
+pprint(race_per_hundredk)
+#_________________________________find rate of homicide per race___________________________
+intents = [row[3] for row in data]
+races = [row[7] for row in data]
+homicide_race_counts = {}
+for ind, race in enumerate(races):
+    if intents[ind] == 'Homicide':
+        if race in homicide_race_counts:
+            homicide_race_counts[race] += 1
+        elif race not in homicide_race_counts:
+            homicide_race_counts[race] = 1
+pprint(homicide_race_counts)
+mapping_homi ={}
+for key in homicide_race_counts:
+    mapping_homi[key] = homicide_race_counts[key] / race_pop_edited[key] 
+homicide_per_hundredk_race = {}
+for item in mapping_homi:
+    homicide_per_hundredk_race[item] = mapping_homi[item] * 100000
+pprint(homicide_per_hundredk_race)
+
+    
